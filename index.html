@@ -107,7 +107,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
   <button data-tab="cg">👥 จัดการ CG</button>
   <button data-tab="elderly">👴 จัดการผู้สูงอายุ</button>
   <button data-tab="equipment">🛠 การจัดการอุปกรณ์</button>
-  <button data-tab="pdf">📄 สร้าง PDF</button>
+  <button data-tab="pdf">📄 ออกรายงาน</button>
 </nav>
 
 <main>
@@ -288,8 +288,10 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
       <div class="field"><label>กรองตามผู้สูงอายุ</label><select id="eqElderlyFilter"><option value="">ทั้งหมด</option></select></div>
       <button class="btn btn-primary btn-sm" id="addEquipmentBtn" style="align-self:flex-end;">+ เพิ่มรายการอุปกรณ์</button>
     </div>
-    <table style="margin-top:10px;"><thead><tr><th>ชื่อผู้สูงอายุ</th><th>เลขครุภัณฑ์</th><th>ประเภทครุภัณฑ์</th><th>วันที่ได้รับ</th><th>จำนวน</th><th></th></tr></thead>
+    <div style="overflow-x:auto;">
+    <table style="margin-top:10px;min-width:760px;"><thead><tr><th>ชื่อผู้สูงอายุ</th><th>เบอร์โทรญาติ</th><th>เลขครุภัณฑ์</th><th>ประเภทครุภัณฑ์</th><th>วันที่ได้รับ</th><th>จำนวน</th><th>สถานะการคืน</th><th></th></tr></thead>
     <tbody id="equipmentTable"></tbody></table>
+    </div>
   </div>
   <div class="card">
     <h3>📄 ออกรายงานทะเบียนคุมครุภัณฑ์</h3>
@@ -302,14 +304,14 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
 <!-- ===================== PDF GENERATION ===================== -->
 <section id="tab-pdf" class="tabpanel">
   <div class="card">
-    <h3>สร้างรายงาน PDF การเยี่ยมบ้าน</h3>
+    <h3>ออกรายงานการเยี่ยมบ้าน</h3>
     <div class="row">
       <div class="field"><label>เดือน</label><select id="pdfMonth"></select></div>
       <div class="field"><label>ปี พ.ศ.</label><select id="pdfYear"></select></div>
       <div class="field"><label>กรอง CG (ถ้าต้องการ)</label><select id="pdfCgFilter"><option value="">ทุก CG</option></select></div>
     </div>
-    <p class="muted" style="margin-top:6px;">1 หน้ากระดาษ A4 จะรวมการเยี่ยมของผู้สูงอายุคนเดียวกันสูงสุด 4 ครั้ง พร้อมสรุปรายงานท้ายหน้า</p>
-    <button class="btn btn-primary" id="generatePdfBtn" style="margin-top:12px;">📄 สร้าง PDF</button>
+    <p class="muted" style="margin-top:6px;">1 หน้ากระดาษ A4 จะรวมการเยี่ยมของผู้สูงอายุคนเดียวกันสูงสุด 4 ครั้ง พร้อมสรุปรายงาน และช่องลงชื่อรับรองท้ายหน้า</p>
+    <button class="btn btn-primary" id="generatePdfBtn" style="margin-top:12px;">📄 ออกรายงาน</button>
     <div class="upload-progress" id="pdfProgress"></div>
   </div>
 </section>
@@ -379,6 +381,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
   <h3 id="eqModalTitle">เพิ่มรายการอุปกรณ์</h3>
   <input type="hidden" id="eqEditId">
   <div class="field"><label>ชื่อผู้สูงอายุ</label><select id="eqElderly"></select></div>
+  <div class="field" style="margin-top:8px;"><label>เบอร์โทรญาติ</label><input type="tel" id="eqRelativePhone" placeholder="เช่น 08xxxxxxxx"></div>
   <div class="row" style="margin-top:8px;">
     <div class="field"><label>เลขครุภัณฑ์</label><input type="text" id="eqItemCode" placeholder="เช่น ครภ.001/2569"></div>
     <div class="field"><label>ประเภทครุภัณฑ์ / วัสดุการแพทย์</label><input type="text" id="eqItemType" placeholder="เช่น เตียงผู้ป่วย, ผ้าอ้อมผู้ใหญ่"></div>
@@ -387,6 +390,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
     <div class="field"><label>วันที่ได้รับการสนับสนุน</label><input type="date" id="eqDateReceived"></div>
     <div class="field"><label>จำนวน</label><input type="number" id="eqQuantity" min="0"></div>
   </div>
+  <div class="field" style="margin-top:8px;"><label>วันที่ส่งคืนอุปกรณ์ (ถ้ายังไม่คืน เว้นว่างไว้)</label><input type="date" id="eqDateReturned"></div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('equipmentModal')">ยกเลิก</button><button class="btn btn-primary" id="eqSaveBtn">บันทึก</button></div>
 </div></div>
 
@@ -1162,7 +1166,22 @@ function buildPdfPageHTML(elderly, cg, visitsChunk, monthLabel, yearBE){
       <div style="font-size:11px;color:#1B2E3B;margin-top:2px;">ปัญหาสำคัญที่พบในช่วงนี้: ${notedIssues.length ? notedIssues.join(' | ') : 'ไม่พบปัญหาเด่นชัด'}</div>
     </div>
 
-    <div style="text-align:center;font-size:10.5px;color:#777;border-top:1px solid #eee;padding:8px 0;margin-top:6px;">
+    <div style="display:flex;justify-content:space-between;margin:14px 24px 0;font-size:11px;color:#1B2E3B;text-align:center;">
+      <div style="width:47%;">
+        <div>ลงชื่อ ..................................................... </div>
+        <div style="margin-top:4px;">( ${cg ? cg.name : '.....................................'} )</div>
+        <div>CG ผู้ปฏิบัติงาน (รับรองว่าได้ปฏิบัติงานจริง)</div>
+        <div style="margin-top:4px;">วันที่ ......... / ......... / .........</div>
+      </div>
+      <div style="width:47%;">
+        <div>ลงชื่อ ..................................................... </div>
+        <div style="margin-top:4px;">( นางสาวปัทมา พลเมือง )</div>
+        <div>ตำแหน่ง พยาบาลวิชาชีพชำนาญการ (ผู้รับรองผลงาน Care Manager)</div>
+        <div style="margin-top:4px;">วันที่ ......... / ......... / .........</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:10.5px;color:#777;border-top:1px solid #eee;padding:8px 0;margin-top:10px;">
       CG: ${cg ? cg.name : '-'} | ${FACILITY_NAME} ต.ดงหม้อทองใต้ อ.บ้านม่วง จ.สกลนคร
     </div>
   </div>`;
@@ -1244,26 +1263,32 @@ function renderEquipmentTable(){
   const rows = Object.entries(STATE.equipment||{})
     .filter(([id,e])=> !filterElderly || e.elderlyId===filterElderly)
     .sort((a,b)=> (b[1].dateReceived||'').localeCompare(a[1].dateReceived||''))
-    .map(([id,e])=>`
+    .map(([id,e])=>{
+      const statusText = e.dateReturned ? `คืนแล้ว (${formatThaiDate(e.dateReturned)})` : 'ยังไม่คืน';
+      return `
       <tr>
         <td>${e.elderlyName||'-'}</td>
+        <td>${e.relativePhone||'-'}</td>
         <td>${e.itemCode||'-'}</td>
         <td>${e.itemType||'-'}</td>
         <td>${e.dateReceived?formatThaiDate(e.dateReceived):'-'}</td>
         <td>${e.quantity||'-'}</td>
+        <td>${statusText}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="openEditEquipment('${id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteEquipment('${id}')">🗑</button></td>
-      </tr>`).join('');
-  document.getElementById('equipmentTable').innerHTML = rows || '<tr><td colspan="6" class="muted">ยังไม่มีข้อมูล</td></tr>';
+      </tr>`;}).join('');
+  document.getElementById('equipmentTable').innerHTML = rows || '<tr><td colspan="8" class="muted">ยังไม่มีข้อมูล</td></tr>';
 }
 
 document.getElementById('addEquipmentBtn').addEventListener('click', ()=>{
   document.getElementById('eqModalTitle').textContent = 'เพิ่มรายการอุปกรณ์';
   document.getElementById('eqEditId').value = '';
+  document.getElementById('eqRelativePhone').value = '';
   document.getElementById('eqItemCode').value = '';
   document.getElementById('eqItemType').value = '';
   document.getElementById('eqDateReceived').value = '';
   document.getElementById('eqQuantity').value = '';
+  document.getElementById('eqDateReturned').value = '';
   openModal('equipmentModal');
 });
 function openEditEquipment(id){
@@ -1271,25 +1296,29 @@ function openEditEquipment(id){
   document.getElementById('eqModalTitle').textContent = 'แก้ไขรายการอุปกรณ์';
   document.getElementById('eqEditId').value = id;
   document.getElementById('eqElderly').value = e.elderlyId||'';
+  document.getElementById('eqRelativePhone').value = e.relativePhone||'';
   document.getElementById('eqItemCode').value = e.itemCode||'';
   document.getElementById('eqItemType').value = e.itemType||'';
   document.getElementById('eqDateReceived').value = e.dateReceived||'';
   document.getElementById('eqQuantity').value = e.quantity||'';
+  document.getElementById('eqDateReturned').value = e.dateReturned||'';
   openModal('equipmentModal');
 }
 document.getElementById('eqSaveBtn').addEventListener('click', ()=>{
   const editId = document.getElementById('eqEditId').value;
   const elderlyId = document.getElementById('eqElderly').value;
+  const relativePhone = document.getElementById('eqRelativePhone').value.trim();
   const itemCode = document.getElementById('eqItemCode').value.trim();
   const itemType = document.getElementById('eqItemType').value.trim();
   const dateReceived = document.getElementById('eqDateReceived').value;
   const quantity = document.getElementById('eqQuantity').value;
+  const dateReturned = document.getElementById('eqDateReturned').value;
   if(!elderlyId){ toast('กรุณาเลือกผู้สูงอายุ','error'); return; }
   if(!itemType){ toast('กรุณากรอกประเภทครุภัณฑ์','error'); return; }
   const elderly = STATE.elderly[elderlyId];
   const data = {
     elderlyId, elderlyName: elderly?elderly.name:'',
-    itemCode, itemType, dateReceived, quantity,
+    relativePhone, itemCode, itemType, dateReceived, quantity, dateReturned,
     createdAt: Date.now()
   };
   const id = editId || ('EQ' + Date.now());
@@ -1303,16 +1332,83 @@ function deleteEquipment(id){
 document.getElementById('eqElderlyFilter').addEventListener('change', renderEquipmentTable);
 
 /* ---- ทะเบียนคุมครุภัณฑ์ (PDF แยกจากรายงานเยี่ยมบ้าน) ---- */
+function buildEquipmentSummaryPageHTML(stats, filterLabel){
+  const pendingRows = stats.pendingList.slice(0,18).map((e,idx)=>`
+    <tr>
+      <td style="padding:5px 4px;border-bottom:1px solid #eee;text-align:center;">${idx+1}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid #eee;">${e.elderlyName||'-'}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid #eee;">${e.relativePhone||'-'}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid #eee;">${e.itemType||'-'}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid #eee;text-align:center;">${e.dateReceived?formatThaiDate(e.dateReceived):'-'}</td>
+    </tr>`).join('');
+  return `
+  <div style="width:754px;height:1083px;font-family:'Sarabun',sans-serif;background:#fff;display:flex;flex-direction:column;">
+    <div style="background:linear-gradient(120deg,#1571BA,#43C1F1);padding:16px 24px;display:flex;align-items:center;gap:14px;color:#fff;">
+      <img src="${LOGO_BASE64}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #fff;flex-shrink:0;">
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:19px;font-weight:700;">ทะเบียนคุมครุภัณฑ์และวัสดุการแพทย์</div>
+        <div style="font-size:12px;margin-top:2px;">สรุปยอดรายการ${filterLabel}</div>
+        <div style="font-size:11px;margin-top:2px;opacity:.92;">${FACILITY_NAME} ต.ดงหม้อทองใต้ อ.บ้านม่วง จ.สกลนคร</div>
+      </div>
+      <div style="width:64px;flex-shrink:0;"></div>
+    </div>
+
+    <div style="padding:22px 26px;flex:1;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
+        <div style="background:#EAF6FC;border-radius:10px;padding:14px 8px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#0F5590;">${stats.totalRecords}</div>
+          <div style="font-size:11px;color:#5B7A8C;">รายการทั้งหมด</div>
+        </div>
+        <div style="background:#EAF6FC;border-radius:10px;padding:14px 8px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#0F5590;">${stats.totalQuantity}</div>
+          <div style="font-size:11px;color:#5B7A8C;">จำนวนชิ้นรวม</div>
+        </div>
+        <div style="background:#FDECE5;border-radius:10px;padding:14px 8px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#D8503A;">${stats.pendingCount}</div>
+          <div style="font-size:11px;color:#5B7A8C;">ยังไม่คืน</div>
+        </div>
+        <div style="background:#EAF6FC;border-radius:10px;padding:14px 8px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#0F5590;">${stats.returnedCount}</div>
+          <div style="font-size:11px;color:#5B7A8C;">คืนแล้ว</div>
+        </div>
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#1571BA;margin-bottom:8px;">📋 รายการที่ยังไม่คืน (สำหรับติดตาม)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead>
+          <tr style="background:#EAF6FC;">
+            <th style="padding:6px 4px;text-align:center;color:#0F5590;">ลำดับ</th>
+            <th style="padding:6px 4px;text-align:left;color:#0F5590;">ชื่อผู้สูงอายุ</th>
+            <th style="padding:6px 4px;text-align:left;color:#0F5590;">เบอร์โทรญาติ</th>
+            <th style="padding:6px 4px;text-align:left;color:#0F5590;">ประเภทครุภัณฑ์</th>
+            <th style="padding:6px 4px;text-align:center;color:#0F5590;">วันที่ได้รับ</th>
+          </tr>
+        </thead>
+        <tbody>${pendingRows || '<tr><td colspan="5" style="padding:8px;text-align:center;color:#5B7A8C;">ไม่มีรายการค้างคืน</td></tr>'}</tbody>
+      </table>
+      ${stats.pendingList.length>18 ? `<div style="font-size:10.5px;color:#5B7A8C;margin-top:6px;">และอีก ${stats.pendingList.length-18} รายการ ดูรายละเอียดทั้งหมดในตารางทะเบียนหน้าถัดไป</div>` : ''}
+    </div>
+
+    <div style="text-align:center;font-size:10.5px;color:#777;border-top:1px solid #eee;padding:8px 0;">
+      หน้าสรุป | ${FACILITY_NAME} ต.ดงหม้อทองใต้ อ.บ้านม่วง จ.สกลนคร
+    </div>
+  </div>`;
+}
+
 function buildEquipmentRegistryPageHTML(rowsChunk, pageNo, totalPages){
-  const tableRows = rowsChunk.map((e,idx)=>`
+  const tableRows = rowsChunk.map((e)=>{
+    const statusText = e.dateReturned ? `คืนแล้ว (${formatThaiDate(e.dateReturned)})` : 'ยังไม่คืน';
+    return `
     <tr>
       <td style="padding:6px 4px;border-bottom:1px solid #eee;text-align:center;">${e.no}</td>
       <td style="padding:6px 4px;border-bottom:1px solid #eee;">${e.elderlyName||'-'}</td>
+      <td style="padding:6px 4px;border-bottom:1px solid #eee;">${e.relativePhone||'-'}</td>
       <td style="padding:6px 4px;border-bottom:1px solid #eee;">${e.itemCode||'-'}</td>
       <td style="padding:6px 4px;border-bottom:1px solid #eee;">${e.itemType||'-'}</td>
       <td style="padding:6px 4px;border-bottom:1px solid #eee;text-align:center;">${e.dateReceived?formatThaiDate(e.dateReceived):'-'}</td>
       <td style="padding:6px 4px;border-bottom:1px solid #eee;text-align:center;">${e.quantity||'-'}</td>
-    </tr>`).join('');
+      <td style="padding:6px 4px;border-bottom:1px solid #eee;text-align:center;">${statusText}</td>
+    </tr>`;}).join('');
   return `
   <div style="width:754px;height:1083px;font-family:'Sarabun',sans-serif;background:#fff;display:flex;flex-direction:column;">
     <div style="background:linear-gradient(120deg,#1571BA,#43C1F1);padding:16px 24px;display:flex;align-items:center;gap:14px;color:#fff;">
@@ -1323,16 +1419,21 @@ function buildEquipmentRegistryPageHTML(rowsChunk, pageNo, totalPages){
       </div>
       <div style="width:60px;flex-shrink:0;"></div>
     </div>
-    <div style="padding:18px 24px;flex:1;">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+    <div style="padding:16px 22px;flex:1;">
+      <table style="width:100%;border-collapse:collapse;font-size:10.5px;table-layout:fixed;">
+        <colgroup>
+          <col style="width:6%"><col style="width:16%"><col style="width:12%"><col style="width:13%"><col style="width:20%"><col style="width:12%"><col style="width:8%"><col style="width:13%">
+        </colgroup>
         <thead>
           <tr style="background:#EAF6FC;">
             <th style="padding:7px 4px;text-align:center;color:#0F5590;">ลำดับ</th>
             <th style="padding:7px 4px;text-align:left;color:#0F5590;">ชื่อผู้สูงอายุ</th>
+            <th style="padding:7px 4px;text-align:left;color:#0F5590;">เบอร์โทรญาติ</th>
             <th style="padding:7px 4px;text-align:left;color:#0F5590;">เลขครุภัณฑ์</th>
             <th style="padding:7px 4px;text-align:left;color:#0F5590;">ประเภทครุภัณฑ์</th>
             <th style="padding:7px 4px;text-align:center;color:#0F5590;">วันที่ได้รับ</th>
             <th style="padding:7px 4px;text-align:center;color:#0F5590;">จำนวน</th>
+            <th style="padding:7px 4px;text-align:center;color:#0F5590;">สถานะการคืน</th>
           </tr>
         </thead>
         <tbody>${tableRows}</tbody>
@@ -1352,9 +1453,20 @@ document.getElementById('generateEquipmentPdfBtn').addEventListener('click', asy
     .map((e,idx)=>({ ...e, no: idx+1 }));
   if(list.length===0){ toast('ไม่พบข้อมูลครุภัณฑ์','error'); return; }
 
-  const ROWS_PER_PAGE = 22;
+  const filterLabel = filterElderly && STATE.elderly[filterElderly] ? ` (เฉพาะ ${STATE.elderly[filterElderly].name})` : ' (ทั้งหมด)';
+  const pendingList = list.filter(e=>!e.dateReturned);
+  const stats = {
+    totalRecords: list.length,
+    totalQuantity: list.reduce((sum,e)=> sum + (parseInt(e.quantity,10)||0), 0),
+    pendingCount: pendingList.length,
+    returnedCount: list.length - pendingList.length,
+    pendingList
+  };
+
+  const ROWS_PER_PAGE = 20;
   const chunks = [];
   for(let i=0;i<list.length;i+=ROWS_PER_PAGE) chunks.push(list.slice(i,i+ROWS_PER_PAGE));
+  const totalPages = 1 + chunks.length; // หน้าสรุป + หน้าตาราง
 
   const btn = document.getElementById('generateEquipmentPdfBtn');
   btn.disabled = true;
@@ -1364,15 +1476,19 @@ document.getElementById('generateEquipmentPdfBtn').addEventListener('click', asy
   const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
 
   try{
+    progressEl.textContent = `กำลังสร้างหน้าสรุป 1/${totalPages}`;
+    root.innerHTML = buildEquipmentSummaryPageHTML(stats, filterLabel);
+    await new Promise(r=>setTimeout(r,250));
+    let canvas = await html2canvas(root.firstElementChild, { scale:2, useCORS:true, backgroundColor:'#ffffff' });
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+
     for(let i=0;i<chunks.length;i++){
-      progressEl.textContent = `กำลังสร้างหน้า ${i+1}/${chunks.length}`;
-      root.innerHTML = buildEquipmentRegistryPageHTML(chunks[i], i+1, chunks.length);
+      progressEl.textContent = `กำลังสร้างหน้า ${i+2}/${totalPages}`;
+      root.innerHTML = buildEquipmentRegistryPageHTML(chunks[i], i+2, totalPages);
       await new Promise(r=>setTimeout(r,250));
-      const target = root.firstElementChild;
-      const canvas = await html2canvas(target, { scale:2, useCORS:true, backgroundColor:'#ffffff' });
-      const imgData = canvas.toDataURL('image/jpeg',0.92);
-      if(i>0) pdf.addPage();
-      pdf.addImage(imgData,'JPEG',0,0,210,297);
+      canvas = await html2canvas(root.firstElementChild, { scale:2, useCORS:true, backgroundColor:'#ffffff' });
+      pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
     }
     pdf.save(`ทะเบียนคุมครุภัณฑ์.pdf`);
     progressEl.textContent = '';
