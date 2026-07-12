@@ -23,6 +23,19 @@ header.app-header img.app-logo{width:46px;height:46px;border-radius:50%;object-f
 header.app-header .app-header-text{flex:1;}
 header.app-header h1{margin:0;font-size:17px;font-weight:700;}
 header.app-header p{margin:3px 0 0;font-size:12px;opacity:.92;}
+header.app-header .app-header-user{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+header.app-header .app-header-user span{font-size:11.5px;opacity:.95;white-space:nowrap;}
+header.app-header .app-header-user .btn{background:rgba(255,255,255,.18);color:#fff;padding:5px 10px;}
+header.app-header .app-header-user .btn:hover{background:rgba(255,255,255,.3);}
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#EAF6FC,#D6ECF7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.login-box{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 28px rgba(21,113,186,.2);max-width:380px;width:100%;}
+.login-banner{background:linear-gradient(135deg,var(--primary),var(--secondary));padding:26px 20px 20px;text-align:center;color:#fff;}
+.login-banner .login-logo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #fff;margin-bottom:10px;}
+.login-banner h2{font-size:16px;margin:0 0 4px;color:#fff;}
+.login-banner p{font-size:11.5px;opacity:.92;margin:0;}
+.login-body{padding:22px 26px 26px;text-align:center;}
+.login-body .field{text-align:left;}
+.login-forgot{font-size:12px;color:var(--secondary);text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline;}
 .adl-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:middle;flex-shrink:0;}
 .adl-dot.adl-1{background:#43A047;}
 .adl-dot.adl-2{background:#FBC02D;}
@@ -103,11 +116,46 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
 </head>
 <body>
 
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-banner">
+      <img class="login-logo" id="loginLogo" alt="โลโก้ รพ.สต.บ้านโคกสง่า">
+      <h2>ระบบบันทึกการเยี่ยมผู้สูงอายุที่มีภาวะพึ่งพิง</h2>
+      <p>รพ.สต.บ้านโคกสง่า ต.ดงหม้อทองใต้ อ.บ้านม่วง จ.สกลนคร</p>
+    </div>
+    <div class="login-body">
+      <div class="field">
+        <label>เลือกบทบาทผู้ใช้งาน</label>
+        <select id="loginRole">
+          <option value="admin">ผู้ดูแลระบบ (Admin)</option>
+          <option value="care_manager">Care Manager</option>
+          <option value="cg">CG (ผู้ดูแลผู้สูงอายุ)</option>
+          <option value="public">บุคคลทั่วไป</option>
+        </select>
+      </div>
+      <div class="field" id="loginPasswordField" style="margin-top:10px;">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน">
+      </div>
+      <button class="btn btn-primary" id="loginBtn" style="margin-top:16px;width:100%;justify-content:center;">เข้าสู่ระบบ</button>
+      <p id="loginError" style="color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;"></p>
+      <div class="login-forgot" id="loginForgotLink">ลืมรหัสผ่าน / ติดต่อผู้ดูแลระบบ</div>
+    </div>
+  </div>
+</div>
+
 <header class="app-header">
   <img class="app-logo" id="appHeaderLogo" alt="โลโก้ รพ.สต.บ้านโคกสง่า">
   <div class="app-header-text">
     <h1>📋 ระบบบันทึกการเยี่ยมผู้สูงอายุที่มีภาวะพึ่งพิง</h1>
     <p>รพ.สต.บ้านโคกสง่า ต.ดงหม้อทองใต้ อ.บ้านม่วง จ.สกลนคร</p>
+  </div>
+  <div class="app-header-user">
+    <span id="currentUserLabel"></span>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-ghost btn-sm" id="changePasswordBtn" style="display:none;">🔑 เปลี่ยนรหัสผ่าน</button>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">ออกจากระบบ</button>
+    </div>
   </div>
 </header>
 
@@ -171,9 +219,9 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
     <div class="row">
       <div class="field"><label>เดือน</label><select id="recMonth"></select></div>
       <div class="field"><label>ปี พ.ศ.</label><select id="recYear"></select></div>
-      <div class="field"><label>จำนวนครั้งที่เยี่ยม </label><input type="number" id="recDayCount" min="1" max="10" value="1"></div>
+      <div class="field"><label>จำนวนการเยี่ยมต่อเดือน</label><input type="number" id="recDayCount" min="5" max="10" value="5"></div>
     </div>
-    <p class="muted" style="margin-top:6px;">ตามเงื่อนไข: CG 1 คนเยี่ยมผู้สูงอายุแต่ละคนได้ 1-10 ครั้งต่อเดือน</p>
+    <p class="muted" style="margin-top:6px;">ตามเงื่อนไข: CG 1 คนเยี่ยมผู้สูงอายุแต่ละคนได้ 5-10 ครั้งต่อเดือน</p>
     <button class="btn btn-secondary" id="openCalendarBtn" style="margin-top:10px;">🗓 เลือกวันที่</button>
     <div id="selectedDatesChips" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;"></div>
   </div>
@@ -369,7 +417,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
     <div class="field"><label>CG ผู้ดูแล</label><select id="elderlyCg"></select></div>
   </div>
   <div class="row" style="margin-top:8px;">
-    <div class="field"><label>จำนวนการเยี่ยมต่อเดือน (5-10 ครั้ง)</label><input type="number" id="elderlyVisitsPerMonth" min="5" max="10" value="5"></div>
+    <div class="field"><label>จำนวนการเยี่ยมตาม Care Plan</label><input type="number" id="elderlyVisitsPerMonth" min="5" max="10" value="5"></div>
     <div class="field"><label>โหมด PDF</label><select id="elderlyPdfMode"><option value="normal">ปกติ (normal)</option><option value="obt">อบต. (obt)</option></select></div>
   </div>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('elderlyModal')">ยกเลิก</button><button class="btn btn-primary" id="elderlySaveBtn">บันทึก</button></div>
@@ -407,6 +455,28 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('equipmentModal')">ยกเลิก</button><button class="btn btn-primary" id="eqSaveBtn">บันทึก</button></div>
 </div></div>
 
+<div class="modal-overlay" id="changePasswordModal"><div class="modal-box">
+  <h3>🔑 เปลี่ยนรหัสผ่าน</h3>
+  <div class="field" id="cpRoleFieldWrap" style="display:none;">
+    <label>เลือกบทบาทที่ต้องการตั้งรหัสผ่านใหม่</label>
+    <select id="cpRole"></select>
+  </div>
+  <div class="field" id="cpOldFieldWrap" style="margin-top:8px;">
+    <label>รหัสผ่านเดิม</label>
+    <input type="password" id="cpOldPassword">
+  </div>
+  <div class="field" style="margin-top:8px;">
+    <label>รหัสผ่านใหม่</label>
+    <input type="password" id="cpNewPassword">
+  </div>
+  <div class="field" style="margin-top:8px;">
+    <label>ยืนยันรหัสผ่านใหม่</label>
+    <input type="password" id="cpConfirmPassword">
+  </div>
+  <p id="cpError" style="color:var(--danger);font-size:12.5px;margin-top:6px;min-height:16px;"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('changePasswordModal')">ยกเลิก</button><button class="btn btn-primary" id="cpSaveBtn">บันทึกรหัสผ่านใหม่</button></div>
+</div></div>
+
 <div class="modal-overlay" id="confirmModal"><div class="modal-box">
   <h3 id="confirmTitle">ยืนยันการทำรายการ</h3>
   <p id="confirmMessage"></p>
@@ -435,6 +505,7 @@ const LOGO_BASE64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQD
 
 firebase.initializeApp(FIREBASE_CONFIG);
 document.getElementById('appHeaderLogo').src = LOGO_BASE64;
+document.getElementById('loginLogo').src = LOGO_BASE64;
 const db = firebase.database();
 
 /* =============================================================
@@ -670,6 +741,142 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 });
 
 /* =============================================================
+   AUTH / ROLE-BASED ACCESS
+   หมายเหตุ: นี่เป็นการกันการเข้าใช้งานระดับหน้าจอ (UI gate) เท่านั้น
+   ไม่ใช่ระบบยืนยันตัวตนที่ปลอดภัยระดับเซิร์ฟเวอร์ เพราะ Firebase Rules
+   ของระบบนี้เปิดอ่าน/เขียนแบบสาธารณะ รหัสผ่านจึงมองเห็นได้ในซอร์สโค้ด/เครือข่าย
+   เหมาะสำหรับกันการกดผิดของเจ้าหน้าที่ภายใน ไม่เหมาะป้องกันผู้ไม่หวังดี
+   รหัสผ่านเก็บใน Firebase (auth_passwords) เพื่อให้เปลี่ยน/ซิงก์ได้ทุกอุปกรณ์
+   รหัสผ่านเริ่มต้นของทุกบทบาท (ยกเว้นบุคคลทั่วไป) คือ 05527
+============================================================= */
+const AUTH_CONFIG = {
+  admin:        { defaultPassword: '05527', label: 'ผู้ดูแลระบบ (Admin)' },
+  care_manager: { defaultPassword: '05527', label: 'Care Manager' },
+  cg:           { defaultPassword: '05527', label: 'CG (ผู้ดูแลผู้สูงอายุ)' },
+  public:       { defaultPassword: null,    label: 'บุคคลทั่วไป' }
+};
+const ROLE_TABS = {
+  admin:        ['dashboard','record','cg','elderly','equipment','pdf'],
+  care_manager: ['dashboard','elderly','equipment'],
+  cg:           ['dashboard','record','equipment'],
+  public:       ['dashboard']
+};
+let CURRENT_ROLE = null;
+STATE.authPasswords = {};
+
+db.ref('auth_passwords').on('value', snap=>{
+  STATE.authPasswords = snap.val() || {};
+  if(Object.keys(STATE.authPasswords).length===0){
+    // ยังไม่เคยตั้งค่า ให้ seed รหัสผ่านเริ่มต้น 05527 ให้ทุกบทบาทที่ต้องล็อกอิน
+    const seed = {};
+    Object.keys(AUTH_CONFIG).forEach(role=>{
+      if(AUTH_CONFIG[role].defaultPassword !== null) seed[role] = AUTH_CONFIG[role].defaultPassword;
+    });
+    db.ref('auth_passwords').set(seed);
+  }
+});
+
+function getPasswordFor(role){
+  return STATE.authPasswords[role] !== undefined ? STATE.authPasswords[role] : AUTH_CONFIG[role].defaultPassword;
+}
+
+document.getElementById('loginRole').addEventListener('change', ()=>{
+  const role = document.getElementById('loginRole').value;
+  document.getElementById('loginPasswordField').style.display = (role==='public') ? 'none' : 'block';
+  document.getElementById('loginError').textContent = '';
+});
+
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+  const role = document.getElementById('loginRole').value;
+  const pwd = document.getElementById('loginPassword').value;
+  const realPassword = getPasswordFor(role);
+  if(realPassword !== null && pwd !== realPassword){
+    document.getElementById('loginError').textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
+    return;
+  }
+  loginAs(role);
+});
+document.getElementById('loginPassword').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('loginBtn').click();
+});
+document.getElementById('loginForgotLink').addEventListener('click', ()=>{
+  showConfirm('ลืมรหัสผ่าน?','ระบบนี้ไม่มีการส่งรหัสผ่านผ่านอีเมลหรือ SMS จริง (ต้องใช้บริการเซิร์ฟเวอร์เพิ่มเติมซึ่งยังไม่ได้ตั้งค่าไว้) กรุณาติดต่อ "ผู้ดูแลระบบ (Admin)" ของหน่วยงานเพื่อขอรีเซ็ตรหัสผ่านให้โดยตรงผ่านเมนู "เปลี่ยนรหัสผ่าน" หลังจาก Admin ล็อกอินเข้าระบบ', ()=>{});
+});
+
+function loginAs(role){
+  CURRENT_ROLE = role;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('currentUserLabel').textContent = 'ผู้ใช้งาน: ' + AUTH_CONFIG[role].label;
+  applyRolePermissions(role);
+}
+
+function applyRolePermissions(role){
+  const allowed = ROLE_TABS[role] || ['dashboard'];
+  document.querySelectorAll('nav.tabs button').forEach(btn=>{
+    btn.style.display = allowed.includes(btn.dataset.tab) ? '' : 'none';
+  });
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('nav.tabs button[data-tab="dashboard"]').classList.add('active');
+  document.getElementById('tab-dashboard').classList.add('active');
+  document.getElementById('changePasswordBtn').style.display = (role==='public') ? 'none' : 'inline-flex';
+  renderDrill();
+}
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  CURRENT_ROLE = null;
+  document.getElementById('loginOverlay').style.display = 'flex';
+});
+
+/* ---- เปลี่ยน/ตั้งค่ารหัสผ่านใหม่ ---- */
+function openChangePasswordModal(){
+  const isAdmin = (CURRENT_ROLE === 'admin');
+  document.getElementById('cpRoleFieldWrap').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('cpOldFieldWrap').style.display = isAdmin ? 'none' : 'block';
+  if(isAdmin){
+    document.getElementById('cpRole').innerHTML = Object.keys(AUTH_CONFIG)
+      .filter(r=>AUTH_CONFIG[r].defaultPassword!==null)
+      .map(r=>`<option value="${r}">${AUTH_CONFIG[r].label}</option>`).join('');
+  }
+  document.getElementById('cpOldPassword').value = '';
+  document.getElementById('cpNewPassword').value = '';
+  document.getElementById('cpConfirmPassword').value = '';
+  document.getElementById('cpError').textContent = '';
+  openModal('changePasswordModal');
+}
+document.getElementById('changePasswordBtn').addEventListener('click', openChangePasswordModal);
+
+document.getElementById('cpSaveBtn').addEventListener('click', ()=>{
+  const isAdmin = (CURRENT_ROLE === 'admin');
+  const targetRole = isAdmin ? document.getElementById('cpRole').value : CURRENT_ROLE;
+  const newPwd = document.getElementById('cpNewPassword').value;
+  const confirmPwd = document.getElementById('cpConfirmPassword').value;
+  const errEl = document.getElementById('cpError');
+
+  if(!isAdmin){
+    const oldPwd = document.getElementById('cpOldPassword').value;
+    if(oldPwd !== getPasswordFor(targetRole)){
+      errEl.textContent = 'รหัสผ่านเดิมไม่ถูกต้อง';
+      return;
+    }
+  }
+  if(newPwd.length < 4){
+    errEl.textContent = 'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร';
+    return;
+  }
+  if(newPwd !== confirmPwd){
+    errEl.textContent = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน';
+    return;
+  }
+  db.ref('auth_passwords/'+targetRole).set(newPwd).then(()=>{
+    toast('เปลี่ยนรหัสผ่านสำเร็จ','success');
+    closeModal('changePasswordModal');
+  });
+});
+
+/* =============================================================
    COMMON SELECT FILLERS
 ============================================================= */
 function renderCgSelects(){
@@ -799,14 +1006,15 @@ function renderDrill(){
         if(a.adlScore!==undefined && a.adlScore!=='') parts.push(`ADL ${a.adlScore}`);
         if(parts.length) assessHtml = `<br><span class="muted">${parts.join(' | ')}</span>`;
       }
+      const canEdit = (CURRENT_ROLE === 'admin');
       return `
       <div class="photo-card">
         <img src="${v.photoUrl}" crossorigin="anonymous">
         <div class="pc-body">${formatThaiDate(v.visitDate)}${v.note?('<br><span class="muted">'+v.note+'</span>'):''}${assessHtml}</div>
-        <div class="pc-actions">
+        ${canEdit ? `<div class="pc-actions">
           <button class="btn btn-ghost btn-sm" onclick="editVisit('${vid}')">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteVisit('${vid}')">🗑</button>
-        </div>
+        </div>` : ''}
       </div>`;
     }).join('');
     content.innerHTML = `<div class="photo-grid">${cards}</div>` || '<p class="muted">ยังไม่มีรูป</p>';
