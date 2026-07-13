@@ -133,16 +133,71 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
           <option value="public">บุคคลทั่วไป</option>
         </select>
       </div>
-      <div class="field" id="loginPasswordField" style="margin-top:10px;">
-        <label>รหัสผ่าน</label>
-        <input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน">
+      <div id="loginCredFields">
+        <div class="field" style="margin-top:10px;">
+          <label>ชื่อผู้ใช้ (Username)</label>
+          <input type="text" id="loginUsername" placeholder="กรอกชื่อผู้ใช้ของคุณ">
+        </div>
+        <div class="field" style="margin-top:10px;">
+          <label>รหัสผ่าน</label>
+          <input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน">
+        </div>
       </div>
       <button class="btn btn-primary" id="loginBtn" style="margin-top:16px;width:100%;justify-content:center;">เข้าสู่ระบบ</button>
       <p id="loginError" style="color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;"></p>
+      <div class="login-forgot" id="loginRegisterLink">ยังไม่มีบัญชี? ลงทะเบียนที่นี่</div>
       <div class="login-forgot" id="loginForgotLink">ลืมรหัสผ่าน / ติดต่อผู้ดูแลระบบ</div>
     </div>
   </div>
 </div>
+
+<div class="login-overlay" id="registerOverlay" style="display:none;z-index:1100;">
+  <div class="login-box">
+    <div class="login-banner">
+      <img class="login-logo" id="registerLogo" alt="โลโก้ รพ.สต.บ้านโคกสง่า">
+      <h2>ลงทะเบียนผู้ใช้งานใหม่</h2>
+      <p>รพ.สต.บ้านโคกสง่า ต.ดงหม้อทองใต้ อ.บ้านม่วง จ.สกลนคร</p>
+    </div>
+    <div class="login-body">
+      <div class="field">
+        <label>ชื่อ-สกุล</label>
+        <input type="text" id="regFullName" placeholder="ชื่อ-นามสกุลจริง">
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>บทบาทที่ต้องการลงทะเบียน</label>
+        <select id="regRole">
+          <option value="cg">CG (ผู้ดูแลผู้สูงอายุ)</option>
+          <option value="care_manager">Care Manager</option>
+          <option value="admin">ผู้ดูแลระบบ (Admin)</option>
+        </select>
+      </div>
+      <div class="field" id="regCgFieldWrap" style="margin-top:10px;">
+        <label>คุณคือ CG คนไหนในทะเบียน</label>
+        <select id="regCgCode"></select>
+      </div>
+      <div class="field" id="regInviteFieldWrap" style="margin-top:10px;display:none;">
+        <label>รหัสเชิญลงทะเบียนสำหรับบทบาทนี้</label>
+        <input type="text" id="regInviteCode" placeholder="ขอรหัสเชิญจากผู้ดูแลระบบ">
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>ตั้งชื่อผู้ใช้ (Username)</label>
+        <input type="text" id="regUsername" placeholder="ตั้งชื่อผู้ใช้สำหรับเข้าสู่ระบบ">
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>ตั้งรหัสผ่าน</label>
+        <input type="password" id="regPassword">
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>ยืนยันรหัสผ่าน</label>
+        <input type="password" id="regConfirmPassword">
+      </div>
+      <button class="btn btn-primary" id="regSubmitBtn" style="margin-top:16px;width:100%;justify-content:center;">ลงทะเบียน</button>
+      <p id="regError" style="color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;"></p>
+      <div class="login-forgot" id="regBackToLoginLink">มีบัญชีอยู่แล้ว? กลับไปเข้าสู่ระบบ</div>
+    </div>
+  </div>
+</div>
+
 
 <header class="app-header">
   <img class="app-logo" id="appHeaderLogo" alt="โลโก้ รพ.สต.บ้านโคกสง่า">
@@ -166,6 +221,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
   <button data-tab="elderly">👴 จัดการผู้สูงอายุ</button>
   <button data-tab="equipment">🛠 การจัดการอุปกรณ์</button>
   <button data-tab="pdf">📄 ออกรายงาน</button>
+  <button data-tab="users">👤 ผู้ใช้งาน</button>
 </nav>
 
 <main>
@@ -374,6 +430,27 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
   </div>
 </section>
 
+<!-- ===================== USER MANAGEMENT (ADMIN ONLY) ===================== -->
+<section id="tab-users" class="tabpanel">
+  <div class="card">
+    <h3>👤 ผู้ใช้งานที่ลงทะเบียนแล้ว</h3>
+    <p class="muted">รายชื่อผู้ใช้งานทั้งหมดที่ลงทะเบียนเข้าใช้ระบบ Admin สามารถรีเซ็ตรหัสผ่านหรือลบบัญชีได้จากที่นี่</p>
+    <div style="overflow-x:auto;">
+    <table style="margin-top:10px;min-width:640px;"><thead><tr><th>ชื่อ-สกุล</th><th>Username</th><th>บทบาท</th><th>เชื่อมโยง CG</th><th>ลงทะเบียนเมื่อ</th><th></th></tr></thead>
+    <tbody id="usersTable"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🔐 รหัสเชิญลงทะเบียน (Invite Code)</h3>
+    <p class="muted">ผู้ที่จะลงทะเบียนเป็น Admin หรือ Care Manager ต้องกรอกรหัสเชิญนี้ให้ถูกต้อง (CG ลงทะเบียนได้เลยไม่ต้องใช้รหัสเชิญ) เปลี่ยนรหัสเชิญได้ตลอดเวลาเพื่อความปลอดภัย</p>
+    <div class="row">
+      <div class="field"><label>รหัสเชิญสำหรับ Admin</label><input type="text" id="inviteCodeAdmin"></div>
+      <div class="field"><label>รหัสเชิญสำหรับ Care Manager</label><input type="text" id="inviteCodeCareManager"></div>
+    </div>
+    <button class="btn btn-primary" id="saveInviteCodesBtn" style="margin-top:10px;">บันทึกรหัสเชิญ</button>
+  </div>
+</section>
+
 </main>
 
 <!-- ============ Modals ============ -->
@@ -456,12 +533,8 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
 </div></div>
 
 <div class="modal-overlay" id="changePasswordModal"><div class="modal-box">
-  <h3>🔑 เปลี่ยนรหัสผ่าน</h3>
-  <div class="field" id="cpRoleFieldWrap" style="display:none;">
-    <label>เลือกบทบาทที่ต้องการตั้งรหัสผ่านใหม่</label>
-    <select id="cpRole"></select>
-  </div>
-  <div class="field" id="cpOldFieldWrap" style="margin-top:8px;">
+  <h3>🔑 เปลี่ยนรหัสผ่านของฉัน</h3>
+  <div class="field">
     <label>รหัสผ่านเดิม</label>
     <input type="password" id="cpOldPassword">
   </div>
@@ -475,6 +548,22 @@ th{color:var(--muted);font-weight:600;font-size:12px;}
   </div>
   <p id="cpError" style="color:var(--danger);font-size:12.5px;margin-top:6px;min-height:16px;"></p>
   <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('changePasswordModal')">ยกเลิก</button><button class="btn btn-primary" id="cpSaveBtn">บันทึกรหัสผ่านใหม่</button></div>
+</div></div>
+
+<div class="modal-overlay" id="adminResetPwModal"><div class="modal-box">
+  <h3>🔑 รีเซ็ตรหัสผ่านผู้ใช้งาน</h3>
+  <input type="hidden" id="arpUserId">
+  <p class="muted" id="arpUserLabel"></p>
+  <div class="field" style="margin-top:8px;">
+    <label>รหัสผ่านใหม่</label>
+    <input type="password" id="arpNewPassword">
+  </div>
+  <div class="field" style="margin-top:8px;">
+    <label>ยืนยันรหัสผ่านใหม่</label>
+    <input type="password" id="arpConfirmPassword">
+  </div>
+  <p id="arpError" style="color:var(--danger);font-size:12.5px;margin-top:6px;min-height:16px;"></p>
+  <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('adminResetPwModal')">ยกเลิก</button><button class="btn btn-primary" id="arpSaveBtn">บันทึก</button></div>
 </div></div>
 
 <div class="modal-overlay" id="confirmModal"><div class="modal-box">
@@ -741,75 +830,94 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 });
 
 /* =============================================================
-   AUTH / ROLE-BASED ACCESS
+   AUTH / USER REGISTRATION SYSTEM
    หมายเหตุ: นี่เป็นการกันการเข้าใช้งานระดับหน้าจอ (UI gate) เท่านั้น
    ไม่ใช่ระบบยืนยันตัวตนที่ปลอดภัยระดับเซิร์ฟเวอร์ เพราะ Firebase Rules
    ของระบบนี้เปิดอ่าน/เขียนแบบสาธารณะ รหัสผ่านจึงมองเห็นได้ในซอร์สโค้ด/เครือข่าย
    เหมาะสำหรับกันการกดผิดของเจ้าหน้าที่ภายใน ไม่เหมาะป้องกันผู้ไม่หวังดี
-   รหัสผ่านเก็บใน Firebase (auth_passwords) เพื่อให้เปลี่ยน/ซิงก์ได้ทุกอุปกรณ์
-   รหัสผ่านเริ่มต้นของทุกบทบาท (ยกเว้นบุคคลทั่วไป) คือ 05527
+   - บุคคลทั่วไป: เข้าดู Dashboard ได้ทันทีไม่ต้องมีบัญชี
+   - CG: ลงทะเบียนเองได้เลย โดยเลือกว่าเป็น CG คนไหนในทะเบียน (ไม่ต้องใช้รหัสเชิญ)
+   - Admin / Care Manager: ต้องกรอก "รหัสเชิญ" ที่ถูกต้องตอนลงทะเบียน (Admin ตั้ง/เปลี่ยนรหัสเชิญได้ที่แท็บ "ผู้ใช้งาน")
+   - รหัสเชิญเริ่มต้นและรหัสผ่านของบัญชี Admin เริ่มต้น (username: admin) คือ 05527
 ============================================================= */
-const AUTH_CONFIG = {
-  admin:        { defaultPassword: '05527', label: 'ผู้ดูแลระบบ (Admin)' },
-  care_manager: { defaultPassword: '05527', label: 'Care Manager' },
-  cg:           { defaultPassword: '05527', label: 'CG (ผู้ดูแลผู้สูงอายุ)' },
-  public:       { defaultPassword: null,    label: 'บุคคลทั่วไป' }
-};
 const ROLE_TABS = {
-  admin:        ['dashboard','record','cg','elderly','equipment','pdf'],
+  admin:        ['dashboard','record','cg','elderly','equipment','pdf','users'],
   care_manager: ['dashboard','elderly','equipment'],
   cg:           ['dashboard','record','equipment'],
   public:       ['dashboard']
 };
-let CURRENT_ROLE = null;
-STATE.authPasswords = {};
+const ROLE_LABELS = {
+  admin: 'ผู้ดูแลระบบ (Admin)',
+  care_manager: 'Care Manager',
+  cg: 'CG (ผู้ดูแลผู้สูงอายุ)',
+  public: 'บุคคลทั่วไป'
+};
 
-db.ref('auth_passwords').on('value', snap=>{
-  STATE.authPasswords = snap.val() || {};
-  if(Object.keys(STATE.authPasswords).length===0){
-    // ยังไม่เคยตั้งค่า ให้ seed รหัสผ่านเริ่มต้น 05527 ให้ทุกบทบาทที่ต้องล็อกอิน
-    const seed = {};
-    Object.keys(AUTH_CONFIG).forEach(role=>{
-      if(AUTH_CONFIG[role].defaultPassword !== null) seed[role] = AUTH_CONFIG[role].defaultPassword;
+let CURRENT_ROLE = null;
+let CURRENT_USER_ID = null;
+let CURRENT_USER = null;
+STATE.users = {};
+STATE.inviteCodes = {};
+
+db.ref('users').on('value', snap=>{
+  STATE.users = snap.val() || {};
+  if(Object.keys(STATE.users).length===0){
+    db.ref('users').set({
+      U_ADMIN_SEED: { username:'admin', password:'05527', displayName:'ผู้ดูแลระบบ', role:'admin', cgCode:'', createdAt: Date.now() }
     });
-    db.ref('auth_passwords').set(seed);
   }
+  renderUsersTable();
+});
+db.ref('invite_codes').on('value', snap=>{
+  STATE.inviteCodes = snap.val() || {};
+  if(Object.keys(STATE.inviteCodes).length===0){
+    db.ref('invite_codes').set({ admin:'05527', care_manager:'05527' });
+  }
+  const a = document.getElementById('inviteCodeAdmin'), c = document.getElementById('inviteCodeCareManager');
+  if(a && document.activeElement!==a) a.value = STATE.inviteCodes.admin || '';
+  if(c && document.activeElement!==c) c.value = STATE.inviteCodes.care_manager || '';
 });
 
-function getPasswordFor(role){
-  return STATE.authPasswords[role] !== undefined ? STATE.authPasswords[role] : AUTH_CONFIG[role].defaultPassword;
-}
-
+/* ---- เข้าสู่ระบบ ---- */
 document.getElementById('loginRole').addEventListener('change', ()=>{
   const role = document.getElementById('loginRole').value;
-  document.getElementById('loginPasswordField').style.display = (role==='public') ? 'none' : 'block';
+  document.getElementById('loginCredFields').style.display = (role==='public') ? 'none' : 'block';
   document.getElementById('loginError').textContent = '';
 });
 
 document.getElementById('loginBtn').addEventListener('click', ()=>{
   const role = document.getElementById('loginRole').value;
-  const pwd = document.getElementById('loginPassword').value;
-  const realPassword = getPasswordFor(role);
-  if(realPassword !== null && pwd !== realPassword){
-    document.getElementById('loginError').textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
-    return;
-  }
-  loginAs(role);
+  const errEl = document.getElementById('loginError');
+  if(role === 'public'){ loginAsPublic(); return; }
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if(!username || !password){ errEl.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'; return; }
+  const entry = Object.entries(STATE.users).find(([id,u])=>u.username===username);
+  if(!entry){ errEl.textContent = 'ไม่พบชื่อผู้ใช้งานนี้ในระบบ'; return; }
+  const [uid, u] = entry;
+  if(u.password !== password){ errEl.textContent = 'รหัสผ่านไม่ถูกต้อง'; return; }
+  loginAsUser(uid, u);
 });
-document.getElementById('loginPassword').addEventListener('keydown', e=>{
-  if(e.key==='Enter') document.getElementById('loginBtn').click();
-});
+document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+document.getElementById('loginUsername').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginPassword').focus(); });
 document.getElementById('loginForgotLink').addEventListener('click', ()=>{
-  showConfirm('ลืมรหัสผ่าน?','ระบบนี้ไม่มีการส่งรหัสผ่านผ่านอีเมลหรือ SMS จริง (ต้องใช้บริการเซิร์ฟเวอร์เพิ่มเติมซึ่งยังไม่ได้ตั้งค่าไว้) กรุณาติดต่อ "ผู้ดูแลระบบ (Admin)" ของหน่วยงานเพื่อขอรีเซ็ตรหัสผ่านให้โดยตรงผ่านเมนู "เปลี่ยนรหัสผ่าน" หลังจาก Admin ล็อกอินเข้าระบบ', ()=>{});
+  showConfirm('ลืมรหัสผ่าน?','ระบบนี้ไม่มีการส่งรหัสผ่านผ่านอีเมลหรือ SMS จริง (ต้องใช้บริการเซิร์ฟเวอร์เพิ่มเติมซึ่งยังไม่ได้ตั้งค่าไว้) กรุณาติดต่อ "ผู้ดูแลระบบ (Admin)" ของหน่วยงานเพื่อขอรีเซ็ตรหัสผ่านให้จากแท็บ "ผู้ใช้งาน"', ()=>{});
 });
 
-function loginAs(role){
-  CURRENT_ROLE = role;
+function loginAsPublic(){
+  CURRENT_ROLE = 'public'; CURRENT_USER_ID = null; CURRENT_USER = null;
   document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('currentUserLabel').textContent = 'ผู้ใช้งาน: บุคคลทั่วไป';
+  applyRolePermissions('public');
+}
+function loginAsUser(uid, u){
+  CURRENT_ROLE = u.role; CURRENT_USER_ID = uid; CURRENT_USER = u;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').textContent = '';
-  document.getElementById('currentUserLabel').textContent = 'ผู้ใช้งาน: ' + AUTH_CONFIG[role].label;
-  applyRolePermissions(role);
+  document.getElementById('currentUserLabel').textContent = `ผู้ใช้งาน: ${u.displayName} (${ROLE_LABELS[u.role]||u.role})`;
+  applyRolePermissions(u.role);
 }
 
 function applyRolePermissions(role){
@@ -823,23 +931,129 @@ function applyRolePermissions(role){
   document.getElementById('tab-dashboard').classList.add('active');
   document.getElementById('changePasswordBtn').style.display = (role==='public') ? 'none' : 'inline-flex';
   renderDrill();
+  renderUsersTable();
 }
 
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
-  CURRENT_ROLE = null;
+  CURRENT_ROLE = null; CURRENT_USER_ID = null; CURRENT_USER = null;
   document.getElementById('loginOverlay').style.display = 'flex';
 });
 
-/* ---- เปลี่ยน/ตั้งค่ารหัสผ่านใหม่ ---- */
-function openChangePasswordModal(){
-  const isAdmin = (CURRENT_ROLE === 'admin');
-  document.getElementById('cpRoleFieldWrap').style.display = isAdmin ? 'block' : 'none';
-  document.getElementById('cpOldFieldWrap').style.display = isAdmin ? 'none' : 'block';
-  if(isAdmin){
-    document.getElementById('cpRole').innerHTML = Object.keys(AUTH_CONFIG)
-      .filter(r=>AUTH_CONFIG[r].defaultPassword!==null)
-      .map(r=>`<option value="${r}">${AUTH_CONFIG[r].label}</option>`).join('');
+/* ---- สลับไปหน้าลงทะเบียน / กลับมาหน้าเข้าสู่ระบบ ---- */
+document.getElementById('loginRegisterLink').addEventListener('click', ()=>{
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('registerOverlay').style.display = 'flex';
+  renderRegCgOptions();
+  updateRegFieldVisibility();
+});
+document.getElementById('regBackToLoginLink').addEventListener('click', ()=>{
+  document.getElementById('registerOverlay').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+});
+
+function renderRegCgOptions(){
+  document.getElementById('regCgCode').innerHTML = Object.keys(STATE.cgs).sort()
+    .map(code=>`<option value="${code}">${STATE.cgs[code].name}</option>`).join('');
+}
+document.getElementById('regRole').addEventListener('change', updateRegFieldVisibility);
+function updateRegFieldVisibility(){
+  const role = document.getElementById('regRole').value;
+  document.getElementById('regCgFieldWrap').style.display = (role==='cg') ? 'block' : 'none';
+  document.getElementById('regInviteFieldWrap').style.display = (role==='cg') ? 'none' : 'block';
+}
+
+document.getElementById('regSubmitBtn').addEventListener('click', ()=>{
+  const fullName = document.getElementById('regFullName').value.trim();
+  const role = document.getElementById('regRole').value;
+  const cgCode = document.getElementById('regCgCode').value;
+  const inviteCode = document.getElementById('regInviteCode').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const confirmPassword = document.getElementById('regConfirmPassword').value;
+  const errEl = document.getElementById('regError');
+
+  if(!fullName){ errEl.textContent = 'กรุณากรอกชื่อ-สกุล'; return; }
+  if(!username){ errEl.textContent = 'กรุณาตั้งชื่อผู้ใช้'; return; }
+  if(Object.values(STATE.users).some(u=>u.username===username)){ errEl.textContent = 'ชื่อผู้ใช้นี้มีคนใช้แล้ว กรุณาตั้งชื่ออื่น'; return; }
+  if(password.length < 4){ errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  if(password !== confirmPassword){ errEl.textContent = 'ยืนยันรหัสผ่านไม่ตรงกัน'; return; }
+  if(role === 'cg' && !cgCode){ errEl.textContent = 'กรุณาเลือกว่าคุณคือ CG คนไหนในทะเบียน'; return; }
+  if(role !== 'cg'){
+    const correctCode = STATE.inviteCodes[role];
+    if(!inviteCode || inviteCode !== correctCode){ errEl.textContent = 'รหัสเชิญไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ'; return; }
   }
+  const newUser = { username, password, displayName: fullName, role, cgCode: role==='cg' ? cgCode : '', createdAt: Date.now() };
+  const uid = 'U' + Date.now();
+  db.ref('users/'+uid).set(newUser).then(()=>{
+    toast('ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้ที่ตั้งไว้','success');
+    document.getElementById('regFullName').value = '';
+    document.getElementById('regUsername').value = '';
+    document.getElementById('regPassword').value = '';
+    document.getElementById('regConfirmPassword').value = '';
+    document.getElementById('regInviteCode').value = '';
+    errEl.textContent = '';
+    document.getElementById('registerOverlay').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+  });
+});
+
+/* ---- แท็บ "ผู้ใช้งาน" (admin เท่านั้น): ตาราง + รีเซ็ตรหัสผ่าน + ลบ + รหัสเชิญ ---- */
+function renderUsersTable(){
+  const tbody = document.getElementById('usersTable');
+  if(!tbody) return;
+  const rows = Object.entries(STATE.users).sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0)).map(([uid,u])=>{
+    const cgName = (u.cgCode && STATE.cgs[u.cgCode]) ? STATE.cgs[u.cgCode].name : '-';
+    const dateLabel = u.createdAt ? formatThaiDate(new Date(u.createdAt).toISOString().slice(0,10)) : '-';
+    return `<tr>
+      <td>${u.displayName||'-'}</td>
+      <td>${u.username||'-'}</td>
+      <td>${ROLE_LABELS[u.role]||u.role||'-'}</td>
+      <td>${cgName}</td>
+      <td>${dateLabel}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openAdminResetPw('${uid}')">🔑 ตั้งรหัสใหม่</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteUser('${uid}')">🗑 ลบ</button></td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = rows || '<tr><td colspan="6" class="muted">ยังไม่มีผู้ใช้งานลงทะเบียน</td></tr>';
+}
+
+function openAdminResetPw(uid){
+  const u = STATE.users[uid];
+  document.getElementById('arpUserId').value = uid;
+  document.getElementById('arpUserLabel').textContent = `ตั้งรหัสผ่านใหม่ให้ "${u.displayName}" (${u.username})`;
+  document.getElementById('arpNewPassword').value = '';
+  document.getElementById('arpConfirmPassword').value = '';
+  document.getElementById('arpError').textContent = '';
+  openModal('adminResetPwModal');
+}
+document.getElementById('arpSaveBtn').addEventListener('click', ()=>{
+  const uid = document.getElementById('arpUserId').value;
+  const newPwd = document.getElementById('arpNewPassword').value;
+  const confirmPwd = document.getElementById('arpConfirmPassword').value;
+  const errEl = document.getElementById('arpError');
+  if(newPwd.length < 4){ errEl.textContent = 'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  if(newPwd !== confirmPwd){ errEl.textContent = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'; return; }
+  db.ref('users/'+uid+'/password').set(newPwd).then(()=>{
+    toast('ตั้งรหัสผ่านใหม่สำเร็จ','success');
+    closeModal('adminResetPwModal');
+  });
+});
+function deleteUser(uid){
+  const u = STATE.users[uid];
+  if(uid === CURRENT_USER_ID){ toast('ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้','error'); return; }
+  showConfirm('ลบบัญชีผู้ใช้นี้?', `ลบบัญชีของ "${u.displayName}" (${u.username}) ออกจากระบบ`, ()=>{
+    db.ref('users/'+uid).remove().then(()=>toast('ลบบัญชีสำเร็จ','success'));
+  });
+}
+document.getElementById('saveInviteCodesBtn').addEventListener('click', ()=>{
+  const adminCode = document.getElementById('inviteCodeAdmin').value.trim();
+  const cmCode = document.getElementById('inviteCodeCareManager').value.trim();
+  if(!adminCode || !cmCode){ toast('กรุณากรอกรหัสเชิญให้ครบทั้งสองช่อง','error'); return; }
+  db.ref('invite_codes').set({ admin: adminCode, care_manager: cmCode }).then(()=>toast('บันทึกรหัสเชิญสำเร็จ','success'));
+});
+
+/* ---- เปลี่ยนรหัสผ่านของตัวเอง (self-service) ---- */
+function openChangePasswordModal(){
   document.getElementById('cpOldPassword').value = '';
   document.getElementById('cpNewPassword').value = '';
   document.getElementById('cpConfirmPassword').value = '';
@@ -849,28 +1063,16 @@ function openChangePasswordModal(){
 document.getElementById('changePasswordBtn').addEventListener('click', openChangePasswordModal);
 
 document.getElementById('cpSaveBtn').addEventListener('click', ()=>{
-  const isAdmin = (CURRENT_ROLE === 'admin');
-  const targetRole = isAdmin ? document.getElementById('cpRole').value : CURRENT_ROLE;
+  const errEl = document.getElementById('cpError');
+  if(!CURRENT_USER){ errEl.textContent = 'บุคคลทั่วไปไม่มีบัญชีให้เปลี่ยนรหัสผ่าน'; return; }
+  const oldPwd = document.getElementById('cpOldPassword').value;
   const newPwd = document.getElementById('cpNewPassword').value;
   const confirmPwd = document.getElementById('cpConfirmPassword').value;
-  const errEl = document.getElementById('cpError');
-
-  if(!isAdmin){
-    const oldPwd = document.getElementById('cpOldPassword').value;
-    if(oldPwd !== getPasswordFor(targetRole)){
-      errEl.textContent = 'รหัสผ่านเดิมไม่ถูกต้อง';
-      return;
-    }
-  }
-  if(newPwd.length < 4){
-    errEl.textContent = 'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร';
-    return;
-  }
-  if(newPwd !== confirmPwd){
-    errEl.textContent = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน';
-    return;
-  }
-  db.ref('auth_passwords/'+targetRole).set(newPwd).then(()=>{
+  if(oldPwd !== CURRENT_USER.password){ errEl.textContent = 'รหัสผ่านเดิมไม่ถูกต้อง'; return; }
+  if(newPwd.length < 4){ errEl.textContent = 'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  if(newPwd !== confirmPwd){ errEl.textContent = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'; return; }
+  db.ref('users/'+CURRENT_USER_ID+'/password').set(newPwd).then(()=>{
+    CURRENT_USER.password = newPwd;
     toast('เปลี่ยนรหัสผ่านสำเร็จ','success');
     closeModal('changePasswordModal');
   });
